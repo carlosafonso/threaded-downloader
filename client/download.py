@@ -14,26 +14,32 @@ import threading
 import sys
 import time
 
-def download(url):
-    while True:
+def download(url, num_chunks_per_thread):
+    for i in range(num_chunks_per_thread):
         try:
             response = requests.get(url)
             print(f"Downloaded {len(response.content)} bytes from {url}")
         except Exception as e:
             print(f"Error downloading from {url}: {e}")
-        time.sleep(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python download.py <url> <num_threads>")
+    if len(sys.argv) != 5:
+        print("Usage: python download.py <total_size_mb> <chunk_size_mb> <url> <num_threads>")
         sys.exit(1)
 
-    url = sys.argv[1]
-    num_threads = int(sys.argv[2])
+    total_size_mb = int(sys.argv[1])
+    chunk_size_mb = int(sys.argv[2])
+    url = sys.argv[3]
+    num_threads = int(sys.argv[4])
+
+    num_chunks = total_size_mb // chunk_size_mb
+    num_chunks_per_thread = num_chunks // num_threads
+
+    print("Will download {} chunks, {} per thread".format(num_chunks, num_chunks_per_thread))
 
     threads = []
     for i in range(num_threads):
-        thread = threading.Thread(target=download, args=(url,))
+        thread = threading.Thread(target=download, args=(url, num_chunks_per_thread))
         threads.append(thread)
         thread.start()
 
